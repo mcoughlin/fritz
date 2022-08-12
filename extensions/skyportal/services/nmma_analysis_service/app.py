@@ -149,6 +149,8 @@ def run_nmma_model(data_dict):
         # output the data
         # in the format desired by NMMA
         f = tempfile.NamedTemporaryFile(suffix=".dat", mode="w", delete=False)
+        # remove non detections (rows where mag and magerr are missing, or not float, or negative)
+        data = data[np.isfinite(data["mag"]) & np.isfinite(data["magerr"]) & (data["mag"] > 0) & (data["magerr"] > 0)]
         for row in data:
             tt = Time(row["mjd"], format="mjd").isot
             filt = row["filter"][-1]
@@ -212,7 +214,7 @@ def run_nmma_model(data_dict):
             )
             f.close()
             inference.to_netcdf(f.name)
-            inference_data = base64.b64encode(open(f.name, "rb").read())
+            inference_data = base64.b64encode(open(f.name, "rb").read()).decode()
             local_temp_files.append(f.name)
 
             with open(json_file) as f:
@@ -223,7 +225,7 @@ def run_nmma_model(data_dict):
             )
             f.close()
             plot_file = os.path.join(plotdir, "lightcurves.png")
-            plot_data = base64.b64encode(open(plot_file, "rb").read())
+            plot_data = base64.b64encode(open(plot_file, "rb").read()).decode()
             local_temp_files.append(f.name)
 
             f = tempfile.NamedTemporaryFile(
@@ -231,7 +233,7 @@ def run_nmma_model(data_dict):
             )
             f.close()
             joblib.dump(result, f.name, compress=3)
-            result_data = base64.b64encode(open(f.name, "rb").read())
+            result_data = base64.b64encode(open(f.name, "rb").read()).decode()
             local_temp_files.append(f.name)
 
             analysis_results = {
