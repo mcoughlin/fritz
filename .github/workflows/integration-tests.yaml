@@ -136,12 +136,14 @@ jobs:
                 # Default config has localhost:9092 which doesn't resolve
                 # inside the container. Point at the broker hostname.
                 BOOM_KAFKA__CONSUMER__ZTF__SERVER: broker:29092
-              # Pin the consumer to the same date our seed step uses, so
-              # it subscribes to ztf_20240617_programid1 instead of the
-              # auto-derived ztf_<today>_programid1.
+              # Replay the fixed archive date the seed step uses, so the consumer
+              # reads ztf_20240617_programid1 instead of the default today topic.
+              # boom v0.3.5+ takes the date via --on (per-date replay), not
+              # positionally; a bare positional date is now rejected.
               command:
                 - /app/kafka_consumer
                 - ztf
+                - --on
                 - "20240617"
             consumer-ztf-partnership:
                environment:
