@@ -165,6 +165,8 @@ skyportal:
         component: source/Source
       - path: "/favorites"
         component: listing/FavoritesPage
+      - path: "/data_access_requests"
+        component: DataAccessRequestsPage
       - path: "/groups"
         component: group/Groups
       - path: "/group/:id"
@@ -180,7 +182,7 @@ skyportal:
       - path: "/sources"
         component: source/SourceList
       - path: "/user/:id"
-        component: user/UserInfo
+        component: user/PublicProfile
       - path: "/upload_photometry/:id"
         component: photometry/UploadPhotometry
       - path: "/about"
@@ -317,6 +319,10 @@ skyportal:
           - name: Analysis Requests
             icon: Analytics
             url: /analysis_requests
+
+          - name: Data Requests
+            icon: LockOpen
+            url: /data_access_requests
 
           - name: Shifts
             icon: SubwayRounded
