@@ -630,7 +630,7 @@ skyportal:
   # JPL Scout NEO Target-of-Opportunity candidates, published by
   # lsst-sssc/scout-alert-bridge. Leave `topic` unset to disable the service.
   scout:
-    topic: # e.g. lco.scout-neo-too-test
+    topic: # e.g. Scout.scout-test
     kafka_server: kafka.scimma.org
     scimma_username: # SCiMMA/Kafka credentials; omit both for an unauthenticated broker
     scimma_password:
@@ -715,6 +715,14 @@ skyportal:
           label: Sign in with ORCID
           # ORCID verifies the addresses it publishes
           trust_email: true
+        - name: github
+          # Reports GitHub's own `verified` flag per address, which the stock
+          # backend drops; no trust_email, so an unverified address cannot
+          # attach to an existing account.
+          class: baselayer.app.backends.github.VerifiedEmailGithubOAuth2
+          key:
+          secret:
+          label: Sign in with GitHub
 
   services:
     disabled:
