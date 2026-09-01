@@ -774,6 +774,7 @@ skyportal:
             enabled: false
             topic: gcn.circulars
             server: gcn.nasa.gov
+            # Unset falls back to gcn.client_id / gcn.client_secret above.
             client_id:
             client_secret:
             # Stable across restarts, distinct from any other consumer.
