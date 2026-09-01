@@ -34,6 +34,9 @@ ext = [
     "cramjam>=2.11.0",
     "pymongo>=4.7.2",
     "htcondor>=24.0",
+    # Extraction engine for the circex external service. Switch to
+    # "circex>=0.2.0" once that release is on PyPI.
+    "circex @ git+https://github.com/skyportal/Circex.git@main",
 ]
 
 [tool.ruff]

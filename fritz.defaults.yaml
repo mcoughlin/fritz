@@ -731,6 +731,78 @@ skyportal:
       # The BOOM alert ingestion is now handled natively by SkyPortal's generic
       # broker_ingest service (driven by the BOOM Broker record's kafka altdata),
       # so the old boom-skyportal-plugin listener has been retired.
+      # Turns incoming GCN circulars into structured data and attaches it to
+      # the GcnEvent it belongs to. Replaces the standalone consumer that ran on
+      # MSI agc03. Writes are off until `writes.live` is set.
+      circex:
+        repo: https://github.com/skyportal/circex-skyportal-plugin.git
+        rev: main
+        params:
+          listener:
+            host: 0.0.0.0
+            port: 7200
+          skyportal:
+            base_url: http://localhost:5000/api
+            api_token: CHANGEME_SKYPORTAL_TOKEN # needs GCN + source write ACLs
+            group_ids: []
+            # SkyPortal requires an instrument_id on every photometry point;
+            # rows resolving to neither a mapped instrument nor this default
+            # cannot be posted and become a comment instead.
+            default_instrument_id: null
+            instrument_map: {}
+            timeout: 30
+          writes:
+            # MASTER SWITCH. false plans every request and logs it, sends
+            # nothing. Leave false until the agc03 consumer has been retired.
+            live: false
+            alias: true
+            source: true
+            confirm_in_gcn: true
+            comment: true
+            tag: false
+            counterpart_tag: HAS-OPTICAL-COUNTERPART
+          resolver:
+            order: [alias, designation, trigger]
+            window_hours: 12
+            match_radius_arcsec: 5.0
+            retry_interval_seconds: 900
+            retry_max_age_hours: 72
+          extractor:
+            # regex | llama | hybrid. hybrid is the measured production
+            # routing: regex for names and coordinates, the constrained LLM
+            # for photometry, redshift and classification.
+            kind: hybrid
+            # llama.cpp OpenAI-compatible server. Set per deployment; empty
+            # falls back to a local server on the default port.
+            llama_url:
+            # Must match what that server serves. llama_require_fields is
+            # model-specific and has to match the model:
+            #   Mistral-7B  false — requiring the fields makes it pad the
+            #               photometry array with fabricated rows.
+            #   Qwen3-27B   true  — otherwise it returns {} for every circular.
+            llama_model:
+            llama_timeout: 300
+            llama_require_fields: false
+            # Real value provided via the sops-managed config secret at deploy.
+            llama_api_key:
+            sn_type_model: null
+            cache_path: /tmp/circex_llm_cache.sqlite
+          consumer:
+            # Live GCN circular stream. group_id must be stable across restarts
+            # and distinct from any other consumer of the same topic.
+            enabled: false
+            topic: gcn.circulars
+            server: gcn.nasa.gov
+            client_id:
+            client_secret:
+            group_id: fritz-circex
+            offset_reset: latest
+            replay_dir: null
+          archive:
+            dir: null
+          auth:
+            # Real value provided via the sops-managed config secret at deploy.
+            incoming_bearer_token: CHANGEME_SHARED_SECRET
       osg:
         repo: https://github.com/skyportal/osg-skyportal-plugin.git
         rev: main
@@ -940,6 +1012,18 @@ skyportal:
         - einstein_probe.wxt.alert
         - swift.bat.guano
         - icecube.lvk_nu_track_search
+    # Circulars are prose follow-up reports. Ingesting them keeps each event's
+    # circular list and aliases current in real time, where the TACH backfill
+    # (POST /gcn_event/<dateobs>/tach) only fills them in on demand and lags.
+    # Circulars never create events; one whose event is unknown is skipped.
+    circulars:
+      enabled: false
+      topic: gcn.circulars
+      # Only used for the first circular of an event, before any alias exists to
+      # match on; later ones match the designation this one writes. A designation
+      # ("GRB 260604C") fixes the burst's UTC day but not its time, so the search
+      # centres on noon that day and 12 hours spans exactly midnight to midnight.
+      window_hours: 12
     reject_tags: # reject notices with these tags (optional)
       - MDC
       - ECLAIRs-Catalog

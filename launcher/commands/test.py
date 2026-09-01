@@ -8,23 +8,23 @@ import yaml
 from launcher.skyportal import api as skyportal_api
 
 _SCOPE_TO_SUBDIRS = {
-    "api": ["api/boom"],
-    "all": ["api/boom"],
+    "api": ["api/boom", "api/circex"],
+    "all": ["api/boom", "api/circex"],
 }
 
 
 def test(scope: str = "all"):
     """Run the integration test suite.
 
-    scope: which test slice to run (only the BOOM API tests remain; the alert
-        page is now served natively by SkyPortal and tested there).
-        api      → BOOM API tests
+    scope: which test slice to run (the alert page is now served natively by
+        SkyPortal and tested there).
+        api      → BOOM + circex API tests
         all      → same as api (default)
     """
     if scope not in _SCOPE_TO_SUBDIRS:
         print(f"Unknown test scope '{scope}'. Choose: {list(_SCOPE_TO_SUBDIRS)}")
         sys.exit(2)
-    boom_subdirs = _SCOPE_TO_SUBDIRS[scope]
+    test_subdirs = _SCOPE_TO_SUBDIRS[scope]
 
     print(f"Running integration testing (scope={scope})...")
 
@@ -100,7 +100,7 @@ def test(scope: str = "all"):
     except subprocess.CalledProcessError:
         sys.exit(1)
 
-    # Discover fritz-specific BOOM test files on the host, then translate
+    # Discover fritz-specific test files on the host, then translate
     # the paths to where they land inside the container.
     #
     # We deliberately scope to the boom/ subdirs rather than rglob'ing the
@@ -115,13 +115,13 @@ def test(scope: str = "all"):
     host_tests = Path("extensions/skyportal/skyportal/tests")
     container_tests = Path("skyportal/tests")
     test_files: list[Path] = []
-    for subdir in boom_subdirs:
+    for subdir in test_subdirs:
         host_root = host_tests / subdir
         if host_root.exists():
             test_files.extend(sorted(host_root.rglob("test_*.py")))
     if not test_files:
         print(
-            f"No test files found under {[str(host_tests / d) for d in boom_subdirs]}"
+            f"No test files found under {[str(host_tests / d) for d in test_subdirs]}"
         )
         sys.exit(1)
     container_paths = [
