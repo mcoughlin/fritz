@@ -752,7 +752,9 @@ skyportal:
             confirm_in_gcn: true
             comment: true
           resolver:
-            order: [alias, designation, trigger]
+            # trigger_id matches an id in the circular text against
+            # GcnEvent.trigger_id, which is stronger than any date arithmetic.
+            order: [alias, trigger_id, designation, trigger]
             window_hours: 12
             localization_cumprob: 0.95
             retry_interval_seconds: 900
