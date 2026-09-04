@@ -49,9 +49,7 @@ skyportal:
         - name: BOOM
           url: https://github.com/boom-astro/boom/pulls
 
-    # Shown once per version, as a dialog a signed-in user must accept before
-    # reaching the app. Bump the version to ask everyone again. The path is
-    # relative to the SkyPortal root, and is read once at startup.
+    # Accepted once per version; bump the version to ask everyone again.
     terms_of_service:
       enabled: true
       version: "2026-09-04"
